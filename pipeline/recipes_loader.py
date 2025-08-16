@@ -24,12 +24,20 @@ def _format_data(data: List[Dict]) -> List[Document]:
             f"Steps:\n" + "\n".join(f"{i+1}. {step}" for i, step in enumerate(record["steps"]))
         )
 
-        # Stable metadata for updates, filters, and reranking
+        # Stable metadata for updates, filters, reranking, and Streamlit UI
         metadata = {
             "id": f"{record['dish_name'].replace(' ', '_')}_{record['origin']}",
             "dish_name": record["dish_name"],
             "origin": record["origin"],
-            "section": "full_recipe"
+            "prep_time": record.get("prep_time"),
+            "cook_time": record.get("cook_time"),
+            "total_time": record.get("total_time"),
+            "servings": record.get("servings"),
+            "ingredients": record.get("ingredients", []),
+            "steps": record.get("steps", []),
+            "notes": record.get("notes"),
+            "source_url": record.get("source_url"),
+            "section": "full_recipe",
         }
 
         documents.append(Document(page_content=page_content, metadata=metadata))
