@@ -37,7 +37,7 @@ and receive both a natural language answer and the relevant recipe context.
 1. Clone the repository:
 ```bash
 git clone https://github.com/Fidelisaboke/african-cuisine-chatbot.git
-cd african-cuisine-chatbot
+cd african-culinary-chatbot
 ```
 
 2. Create a Python virtual environment:
