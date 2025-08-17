@@ -4,7 +4,6 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain_core.documents import Document
 from langchain_core.runnables import Runnable
 from typing import List, Tuple
-from dotenv import load_dotenv
 
 from pipeline.recipes_loader import load_recipes
 from pipeline.chunking import create_chunks
@@ -12,9 +11,6 @@ from pipeline.indexing import build_vector_store
 from pipeline.retrieval import create_retriever
 from pipeline.chain import create_rag_chain
 from pipeline.utils import safe_json_loads, parse_time_to_minutes
-
-# Load environmental variables
-load_dotenv()    
 
 # --- Setup ---
 st.set_page_config(page_title="African Culinary RAG", page_icon=":stew:", layout="wide")

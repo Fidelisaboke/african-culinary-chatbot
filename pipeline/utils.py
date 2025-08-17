@@ -1,7 +1,22 @@
 """Utility functions used in other app modules."""
 
 import json
+import os
 import re
+import sys
+
+def get_groq_api_key():
+    """Return the GROQ API key, using .env for CLI or Streamlit secrets if available."""
+    # If running in Streamlit, st.secrets exists
+    if "streamlit" in sys.modules:
+        import streamlit as st
+        return st.secrets.get("GROQ_API_KEY")
+    
+    # Otherwise, load from .env
+    from dotenv import load_dotenv
+    load_dotenv()
+    return os.getenv("GROQ_API_KEY")
+
 
 def safe_json_loads(value, default=None):
     """Try to json.loads if value is str, else return as-is.

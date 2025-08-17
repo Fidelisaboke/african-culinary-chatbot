@@ -52,11 +52,22 @@ source .venv/bin/activate  # Linux / macOS
 pip install -r requirements.txt
 ```
 
-4. Copy `.env.example` to `.env`:
+4. Set environment variables
+- Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 - Set environment variables listed in the `.env` to your secret environment values.
+
+- Alternatively, create the `.streamlit/secrets.toml` file:
+```bash
+mkdir .streamlit
+touch .streamlit/secrets.toml
+```
+- Add the Groq API Key to the TOML file:
+```bash
+GROQ_API_KEY = "your-api-key"
+```
 
 ## Basic Usage
 ### Streamlit Application
