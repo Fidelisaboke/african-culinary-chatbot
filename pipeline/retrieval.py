@@ -1,14 +1,14 @@
 """Retriever module with reranking."""
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
-def create_retriever(vector_store: Chroma, k: int = 10, reranker_top_n: int = 5) -> ContextualCompressionRetriever:
+def create_retriever(vector_store: FAISS, k: int = 10, reranker_top_n: int = 5) -> ContextualCompressionRetriever:
     """Builds a retriever with reranking.
 
     Args:
-        vector_store (Chroma): The Chroma vector store object containing the embeddings.
+        vector_store (FAISS): The FAISS vector store object containing the embeddings.
         k (int, optional): Number of docs to fetch from the vector store. Defaults to 10.
         reranker_top_n (int, optional): Number of docs to return after reranking. Defaults to 3.
 
