@@ -1,6 +1,4 @@
 """Ingestion module for loading the JSON data of recipes and chunking."""
-import json
-from langchain_community.document_loaders import JSONLoader
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List
