@@ -16,13 +16,25 @@ def _format_data(data: List[Dict]) -> List[Document]:
     """
     documents = []
     for record in data:
-        # Format page_content cleanly
-        page_content = (
-            f"Dish: {record['dish_name']}\n"
-            f"Origin: {record['origin']}\n\n"
-            f"Ingredients:\n- " + "\n- ".join(record["ingredients"]) + "\n\n"
-            f"Steps:\n" + "\n".join(f"{i+1}. {step}" for i, step in enumerate(record["steps"]))
-        )
+        # Build structured page_content dynamically
+        sections = [
+            f"Dish: {record['dish_name']}",
+            f"Origin: {record['origin']}"
+        ]
+
+        # Add other sections
+        if record.get("ingredients"):
+            sections.append("Ingredients:\n- " + "\n- ".join(record["ingredients"]))
+        if record.get("steps"):
+            sections.append("Steps:\n" + "\n".join(f"{i+1}. {s}" for i, s in enumerate(record["steps"])))
+        if record.get("notes"):
+            sections.append("Notes:\n" + record["notes"])
+        if record.get("nutrition"):
+            sections.append("Nutrition:\n" + "\n".join(f"{k}: {v}" for k, v in record["nutrition"].items()))
+        if record.get("source_url"):
+            sections.append(f"Source: {record['source_url']}")
+
+        page_content = "\n\n".join(sections)
 
         # Stable metadata for updates, filters, reranking, and Streamlit UI
         metadata = {
@@ -33,9 +45,10 @@ def _format_data(data: List[Dict]) -> List[Document]:
             "cook_time": record.get("cook_time"),
             "total_time": record.get("total_time"),
             "servings": record.get("servings"),
-            "ingredients": record.get("ingredients", []),
-            "steps": record.get("steps", []),
+            "ingredients": json.dumps(record.get("ingredients", [])),
+            "steps": json.dumps(record.get("steps", [])),
             "notes": record.get("notes"),
+            "nutrition": json.dumps(record.get("nutrition", {})),
             "source_url": record.get("source_url"),
             "section": "full_recipe",
         }

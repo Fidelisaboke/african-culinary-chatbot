@@ -4,19 +4,19 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
-def create_retriever(vector_store: Chroma, fetch_count: int = 6, reranker_top_n: int = 3) -> ContextualCompressionRetriever:
+def create_retriever(vector_store: Chroma, k: int = 10, reranker_top_n: int = 5) -> ContextualCompressionRetriever:
     """Builds a retriever with reranking.
 
     Args:
         vector_store (Chroma): The Chroma vector store object containing the embeddings.
-        fetch_count (int, optional): Number of docs to fetch from the vector store. Defaults to 6.
+        k (int, optional): Number of docs to fetch from the vector store. Defaults to 10.
         reranker_top_n (int, optional): Number of docs to return after reranking. Defaults to 3.
 
     Returns:
         ContextualCompressionRetriever: The new retriever after reranking.
     """
     # Stage 1 retriever
-    retriever = vector_store.as_retriever(search_kwargs={"k": fetch_count})
+    retriever = vector_store.as_retriever(search_kwargs={"k": k})
 
     # Reranking
     model = HuggingFaceCrossEncoder(model_name='cross-encoder/ms-marco-MiniLM-L-6-v2')
