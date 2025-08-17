@@ -1,4 +1,5 @@
 import streamlit as st
+import json
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_core.documents import Document
 from langchain_core.runnables import Runnable
@@ -13,6 +14,18 @@ from pipeline.chain import create_rag_chain
 
 # Load environmental variables
 load_dotenv()
+
+def safe_json_loads(value, default=None):
+    """
+    Try to json.loads if value is str, else return as-is.
+    - Useful for loading JSON strings from metadata.
+    """
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return default if default is not None else value
+    return value if value is not None else default
 
 # --- Setup ---
 st.set_page_config(page_title="African Culinary RAG", page_icon="🍲", layout="wide")
@@ -30,7 +43,7 @@ def initialize_pipeline() -> Tuple[Runnable, ContextualCompressionRetriever, Lis
 
     # 3. Build or load vector store
     print("Building vector store...")
-    vector_store = build_vector_store(chunks)
+    vector_store = build_vector_store(documents=chunks, vector_store_path="vectors/chroma_db")
 
     # 4. Build retriever
     print("Building retriever...")
@@ -68,60 +81,47 @@ if st.button("Ask") and user_question:
 
 # --- Show retrieved recipes (context) ---
 st.markdown("### 📚 Sources / Retrieved Recipes")
-docs = retriever.get_relevant_documents(user_question)
+docs = retriever.invoke(user_question)
+
+# Deduplicate by recipe id
+unique_ids = {d.metadata["id"] for d in docs}
+display_recipes = [r for r in recipes if r.metadata["id"] in unique_ids]
 
 if not docs:
     st.info("No recipes were retrieved for your query. Try rephrasing your question!")
 else:
-    for i, doc in enumerate(docs, start=1):
+    for i, doc in enumerate(display_recipes, start=1):
+        # Use metadata first
         dish_name = doc.metadata.get("dish_name", "Unknown Dish")
         origin = doc.metadata.get("origin", "Unknown Origin")
         notes = doc.metadata.get("notes", None)
-        nutrition = doc.metadata.get("nutrition", None)
+        
+        # Auto json.loads if stored as string
+        ingredients = safe_json_loads(doc.metadata.get("ingredients", []), [])
+        steps = safe_json_loads(doc.metadata.get("steps", []), [])
+        nutrition = safe_json_loads(doc.metadata.get("nutrition", {}), {})
 
         with st.expander(f"📖 {i}. {dish_name} ({origin})"):
             st.markdown(f"#### 🌍 Origin: {origin}")
 
-            # Extract recipe sections safely
-            content = doc.page_content
-            ingredients = []
-            steps = []
-
-            if "Ingredients:" in content:
-                try:
-                    ingredients_text = content.split("Ingredients:")[1].split("Steps:")[0]
-                    ingredients = [line.strip() for line in ingredients_text.strip().split("\n") if line.strip()]
-                except Exception:
-                    pass
-
-            if "Steps:" in content:
-                try:
-                    steps_text = content.split("Steps:")[1]
-                    steps = [line.strip() for line in steps_text.strip().split("\n") if line.strip()]
-                except Exception:
-                    pass
-
-            # Display ingredients
             if ingredients:
                 st.markdown("#### 🥘 Ingredients")
                 st.markdown("\n".join(f"- {ing}" for ing in ingredients))
             else:
                 st.warning("⚠️ Ingredients not available for this recipe.")
 
-            # Display steps
             if steps:
                 st.markdown("#### 👩‍🍳 Steps")
                 st.markdown("\n".join(f"{idx+1}. {step}" for idx, step in enumerate(steps)))
             else:
                 st.warning("⚠️ Steps not available for this recipe.")
 
-            # Optional metadata
             if notes:
                 st.info(f"📝 Notes: {notes}")
 
             if nutrition:
                 st.success(f"🍽 Nutrition: {nutrition}")
 
-            # Copy button (Streamlit UI trick)
             st.code("\n".join(ingredients), language="text")
             st.caption("📋 Copy ingredients above for your shopping list.")
+
