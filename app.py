@@ -22,25 +22,45 @@ st.set_page_config(page_title="African Culinary RAG", page_icon=":stew:", layout
 @st.cache_resource(show_spinner=False)
 def initialize_pipeline() -> Tuple[Runnable, ContextualCompressionRetriever, List[Document]]:
     """Load data, build vector store, retriever, and chain (cached)."""
+
+    status_text = st.empty()
+    progress_bar = st.progress(0)
+
+    total_steps = 5
+
     # 1. Load recipes
     print("Loading recipes...")
+    status_text.text("Step 1/5: Loading recipes...")
     recipes = load_recipes(file_path="data/african_recipes.json")
+    progress_bar.progress(1 / total_steps)
 
     # 2. Create chunks
     print("Creating chunks...")
+    status_text.text("Step 2/5: Creating document chunks...")
     chunks = create_chunks(recipes)
+    progress_bar.progress(2 / total_steps)
 
     # 3. Build or load vector store
     print("Building vector store...")
-    vector_store = build_vector_store(documents=chunks, vector_store_path="vectors/chroma_db")
+    status_text.text("Step 3/5: Building vector store...")
+    vector_store = build_vector_store(documents=chunks, vector_store_path="vectors/faiss_index")
+    progress_bar.progress(3 / total_steps)
 
     # 4. Build retriever
-    print("Building retriever...")
+    print("Creating retriever...")
+    status_text.text("Step 4/5: Creating retriever...")
     retriever = create_retriever(vector_store)
+    progress_bar.progress(4 / total_steps)
 
     # 5. Create RAG chain
-    print("Creating RAG chain...")
+    print("Initializing RAG chain...")
+    status_text.text("Step 5/5: Initializing RAG chain...")
     rag_chain = create_rag_chain(retriever)
+    progress_bar.progress(5 / total_steps)
+
+    # Done! Clear progress and status
+    status_text.empty()
+    progress_bar.empty()
 
     return rag_chain, retriever, recipes
 
@@ -125,6 +145,7 @@ if ask_button and user_question:
 
     # --- Display Retrieved Recipes ---
     st.markdown("### :books: Sources / Retrieved Recipes")
+    st.markdown("#### These are the sources referenced by the chatbot:")
 
     if not docs:
         st.info("No recipes were retrieved for your query. Try rephrasing your question!")
