@@ -50,6 +50,7 @@ def _format_data(data: List[Dict]) -> List[Document]:
             "notes": record.get("notes"),
             "nutrition": json.dumps(record.get("nutrition", {})),
             "source_url": record.get("source_url"),
+            "image_url": record.get("image_url"),
             "section": "full_recipe",
         }
 
