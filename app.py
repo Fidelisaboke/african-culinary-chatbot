@@ -103,93 +103,99 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-user_question = st.text_input(":mag: Enter your question:")
-if st.button("Ask") and user_question:
+user_question = st.text_input(":mag: Enter your question:", placeholder="e.g., How do I make Githeri?")
+ask_button = st.button("Ask!", use_container_width=True)
+
+# Trigger retreival when the user clicks "Ask"
+if ask_button and user_question:
     with st.spinner("Thinking..."):
+        # Generate answer
         answer = rag_chain.invoke(user_question)
 
-    # Answer Display
+        # Retrieve related recipes
+        docs = retriever.invoke(user_question)
+
+        # Deduplicate and filter recipes
+        unique_ids = {d.metadata["id"] for d in docs}
+        display_recipes = [r for r in recipes if r.metadata["id"] in unique_ids]
+
+    # --- Answer Display ---
     st.markdown("### :memo: Answer")
     st.write(answer)
 
-# --- Show retrieved recipes (context) ---
-st.markdown("### :books: Sources / Retrieved Recipes")
-docs = retriever.invoke(user_question)
+    # --- Display Retrieved Recipes ---
+    st.markdown("### :books: Sources / Retrieved Recipes")
 
-# Deduplicate by recipe id
-unique_ids = {d.metadata["id"] for d in docs}
-display_recipes = [r for r in recipes if r.metadata["id"] in unique_ids]
+    if not docs:
+        st.info("No recipes were retrieved for your query. Try rephrasing your question!")
+    else:
+        for i, doc in enumerate(display_recipes, start=1):
+            # Metadata
+            dish_name = doc.metadata.get("dish_name", "Unknown Dish")
+            origin = doc.metadata.get("origin", "Unknown Origin")
+            notes = doc.metadata.get("notes", None)
+            source = doc.metadata.get("source_url", None)
+            image_url = doc.metadata.get("image_url", None)
 
-if not docs:
-    st.info("No recipes were retrieved for your query. Try rephrasing your question!")
-else:
-    for i, doc in enumerate(display_recipes, start=1):
-        # Metadata
-        dish_name = doc.metadata.get("dish_name", "Unknown Dish")
-        origin = doc.metadata.get("origin", "Unknown Origin")
-        notes = doc.metadata.get("notes", None)
-        source = doc.metadata.get("source_url", None)
-        image_url = doc.metadata.get("image_url", None)
+            # Auto json.loads if stored as string
+            ingredients = safe_json_loads(doc.metadata.get("ingredients", []), [])
+            steps = safe_json_loads(doc.metadata.get("steps", []), [])
+            nutrition = safe_json_loads(doc.metadata.get("nutrition", {}), {})
 
-        # Auto json.loads if stored as string
-        ingredients = safe_json_loads(doc.metadata.get("ingredients", []), [])
-        steps = safe_json_loads(doc.metadata.get("steps", []), [])
-        nutrition = safe_json_loads(doc.metadata.get("nutrition", {}), {})
-
-        with st.expander(f":open_book: {i}. {dish_name} ({origin})"):
-            # Top section with optional image
-            if image_url:
-                col1, col2 = st.columns([1, 2])
-                with col1:
-                    st.image(image_url, use_container_width=True, caption=dish_name)
-                with col2:
-                    st.markdown(f"**Origin:** {origin}")
-                    if doc.metadata.get("servings"):
-                        st.markdown(f"**Servings:** {doc.metadata['servings']}")
-                    if doc.metadata.get("total_time"):
-                        st.markdown(
-                            f"**Total Time:** {parse_time_to_minutes(doc.metadata['total_time'])}"
-                        )
-            else:
-                st.markdown(f"**Origin:** {origin}")
-
-            # Ingredients
-            if ingredients:
-                st.markdown("#### :shallow_pan_of_food: Ingredients")
-                st.markdown("\n".join(f"- {ing}" for ing in ingredients))
-                st.download_button(
-                    label="📥 Download Ingredients",
-                    data="\n".join(ingredients),
-                    file_name=f"{dish_name}_ingredients.txt",
-                )
-            else:
-                st.warning(":warning: Ingredients not available.")
-
-            # Steps
-            if steps:
-                st.markdown("#### :woman_cook: Steps")
-                st.markdown(
-                    "\n".join(f"{idx+1}. {step}" for idx, step in enumerate(steps))
-                )
-            else:
-                st.warning(":warning: Steps not available.")
-
-            # Notes
-            if notes:
-                st.info(f":memo: Notes: {notes}")
-
-            # Nutrition (table)
-            if nutrition:
-                st.markdown("#### :fork_and_knife: Nutrition Facts")
-                if isinstance(nutrition, dict) and nutrition:
-                    df_nutrition = pd.DataFrame(
-                        list(nutrition.items()), columns=["Nutrient", "Value"]
-                    )
-                    st.table(df_nutrition)
+            with st.expander(f":open_book: {i}. {dish_name} ({origin})"):
+                # Top section with optional image
+                if image_url:
+                    col1, col2 = st.columns([1, 2])
+                    with col1:
+                        st.image(image_url, use_container_width=True, caption=dish_name)
+                    with col2:
+                        st.markdown(f"**Origin:** {origin}")
+                        if doc.metadata.get("servings"):
+                            st.markdown(f"**Servings:** {doc.metadata['servings']}")
+                        if doc.metadata.get("total_time"):
+                            st.markdown(
+                                f"**Total Time:** {parse_time_to_minutes(doc.metadata['total_time'])} minutes"
+                            )
                 else:
-                    st.write(nutrition)
+                    st.markdown(f"**Origin:** {origin}")
 
-            # Recipe source
-            if source:
-                st.markdown(f"Recipe source: [Source]({doc.metadata['source_url']})")
+                # Ingredients
+                if ingredients:
+                    st.markdown("#### :shallow_pan_of_food: Ingredients")
+                    st.markdown("\n".join(f"- {ing}" for ing in ingredients))
+                    st.download_button(
+                        label="📥 Download Ingredients",
+                        data="\n".join(ingredients),
+                        file_name=f"{dish_name}_ingredients.txt",
+                    )
+                else:
+                    st.warning(":warning: Ingredients not available.")
+
+                # Steps
+                if steps:
+                    st.markdown("#### :woman_cook: Steps")
+                    st.markdown(
+                        "\n".join(f"{idx+1}. {step}" for idx, step in enumerate(steps))
+                    )
+                else:
+                    st.warning(":warning: Steps not available.")
+
+                # Notes
+                if notes:
+                    st.info(f":memo: Notes: {notes}")
+
+                # Nutrition (table)
+                if nutrition:
+                    st.markdown("#### :fork_and_knife: Nutrition Facts")
+                    if isinstance(nutrition, dict) and nutrition:
+                        df_nutrition = pd.DataFrame(
+                            list(nutrition.items()), columns=["Nutrient", "Value"]
+                        )
+                        st.table(df_nutrition)
+                    else:
+                        st.write(nutrition)
+
+                # Recipe source
+                if source:
+                    st.markdown(f"Recipe source: [Source]({doc.metadata['source_url']})")
 
