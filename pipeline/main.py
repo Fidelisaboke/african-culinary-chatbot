@@ -3,11 +3,11 @@
 import sys
 from dotenv import load_dotenv
 
-from recipes_loader import load_recipes
-from chunking import create_chunks
-from indexing import build_vector_store
-from retrieval import create_retriever
-from chain import create_rag_chain
+from .recipes_loader import load_recipes
+from .chunking import create_chunks
+from .indexing import build_vector_store
+from .retrieval import create_retriever
+from .chain import create_rag_chain
 
 # Load environmental variables from the .env file
 load_dotenv()
