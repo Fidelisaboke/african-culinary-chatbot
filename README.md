@@ -36,7 +36,7 @@ and receive both a natural language answer and the relevant recipe context.
 ### Setup Instructions
 1. Clone the repository:
 ```bash
-git clone https://github.com/Fidelisaboke/african-cuisine-chatbot.git
+git clone https://github.com/Fidelisaboke/african-culinary-chatbot.git
 cd african-culinary-chatbot
 ```
 
