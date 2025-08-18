@@ -86,8 +86,7 @@ streamlit run app.py
 ### CLI Application
 1. Run `pipeline/main.py`:
 ```bash
-cd pipeline
-python main.py
+python -m pipeline.main
 ```
 - On running the file, the RAG pipeline will be initiated. This will take a few moments.
 - Once it's complete, the prompt will be displayed:
