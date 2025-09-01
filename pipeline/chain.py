@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import Runnable
 
-from .utils import parse_time_to_minutes, get_groq_api_key
+from .utils import parse_time_to_minutes, get_groq_api_key, get_groq_model_name
 
 def _format_recipe_metadata(doc):
     """Convert a Document's metadata into readable text for the LLM."""
@@ -56,7 +56,7 @@ def create_rag_chain(retriever: ContextualCompressionRetriever) -> Runnable:
         (Runnable): Runnable object representing the RAG chain.
     """
     api_key = get_groq_api_key()
-    llm = ChatGroq(model="llama3-8b-8192", api_key=api_key)
+    llm = ChatGroq(model=get_groq_model_name(), api_key=api_key)
 
     prompt_template = """You are a helpful African recipe assistant.
     Use the context below to answer the user's question on recipes.

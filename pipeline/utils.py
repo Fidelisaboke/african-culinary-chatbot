@@ -5,17 +5,26 @@ import os
 import re
 import sys
 
-def get_groq_api_key():
-    """Return the GROQ API key, using .env for CLI or Streamlit secrets if available."""
-    # If running in Streamlit, st.secrets exists
+def get_secret(secret_name: str):
+    """Return a secret value set in the .env file or Streamlit secrets."""
     if "streamlit" in sys.modules:
         import streamlit as st
-        return st.secrets.get("GROQ_API_KEY")
+        return st.secrets.get(secret_name)
     
     # Otherwise, load from .env
     from dotenv import load_dotenv
     load_dotenv()
-    return os.getenv("GROQ_API_KEY")
+    return os.getenv(secret_name)
+
+
+def get_groq_api_key():
+    """Return the GROQ API key, using .env for CLI or Streamlit secrets if available."""
+    return get_secret("GROQ_API_KEY")
+
+
+def get_groq_model_name():
+    """Return the GROQ Model name from the .env or Streamlit secrets."""
+    return get_secret("GROQ_MODEL_NAME")
 
 
 def safe_json_loads(value, default=None):
