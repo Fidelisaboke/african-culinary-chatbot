@@ -64,9 +64,12 @@ cp .env.example .env
 mkdir .streamlit
 touch .streamlit/secrets.toml
 ```
-- Add the Groq API Key to the TOML file:
+- Add the Groq API Key and model name to the TOML file:
 ```bash
 GROQ_API_KEY = "your-api-key"
+
+# GROQ Model - The app uses the one set by default
+GROQ_MODEL_NAME = "llama-3.3-70b-versatile"
 ```
 
 ## Basic Usage
