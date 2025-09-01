@@ -59,7 +59,7 @@ def _format_data(data: List[Dict]) -> List[Document]:
     return documents
 
 
-def load_recipes(file_path: str = "../data/african_recipes.json") -> List[Document]:
+def load_recipes(file_path: str = None) -> List[Document]:
     """Loads the African recipes dataset as a list of Document objects.
 
     Args:
@@ -71,12 +71,18 @@ def load_recipes(file_path: str = "../data/african_recipes.json") -> List[Docume
     Returns:
         List[Document]: A list of Document objects representing the recipes
     """
+    if file_path is None:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to the data file
+        file_path = os.path.join(script_dir, "../data/african_recipes.json")
+    
     # Load JSON recipes
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         recipes = _format_data(data)
     else:
-        raise FileNotFoundError("African recipes data file does not exist.")
+        raise FileNotFoundError("African recipes data file does not exist.")        
     
     return recipes
